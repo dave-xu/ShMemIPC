@@ -36,7 +36,7 @@ namespace smi
 
     bool ShMemClient::IsValid()
     {
-        return Initialized;
+        return Initialized && FailedCount < MAX_FAIL_NUM;
     }
 
     bool ShMemClient::AllocateShMemSlotIndex()
