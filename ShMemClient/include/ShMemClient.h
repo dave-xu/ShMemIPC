@@ -30,6 +30,7 @@ namespace smi
         int                             MaxSlotNum;
         int                             MaxDataSize;
         int                             AllocatedSlotIndex;
+        int                             FailedCount;
 
         std::shared_ptr<ShMemHolder>    ShMemSlotPtr;
         std::shared_ptr<ShMemHolder>    ShMemDataPtr;

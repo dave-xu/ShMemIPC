@@ -105,7 +105,11 @@ namespace smi
 
 	ShMemHolder::ShMemHolder(const char* name, smiSizeType size)
 		: Size(size)
-		, Handle(smiInvalidFileHandle)
+#if ON_WINDOWS
+		, Handle(NULL)
+#else
+		, Handle(-1)
+#endif
 		, MappedAddress(0)
 		, Initialized(false)
 	{
@@ -132,11 +136,7 @@ namespace smi
 		if (!Initialized)
 		{
 #if ON_WINDOWS
-			Handle = OpenFileMappingA(FILE_MAP_ALL_ACCESS, FALSE, FullShMemName);
-			if (Handle == NULL)
-			{
-				Handle = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, Size, FullShMemName);
-			}
+			Handle = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, Size, FullShMemName);
 			if (Handle != NULL)
 			{
 				MappedAddress = MapViewOfFile(Handle, FILE_MAP_ALL_ACCESS, 0, 0, Size);
@@ -197,7 +197,7 @@ namespace smi
 
 	bool ShMemHolder::IsValid()
 	{
-		return Initialized && Handle != smiInvalidFileHandle;
+		return Initialized;
 	}
 
 	const char* ShMemHolder::GetName()

@@ -18,6 +18,7 @@ namespace smi
         : MaxSlotNum(MaxConnNum)
         , MaxDataSize(aDataSize)
         , AllocatedSlotIndex(-1)
+        , FailedCount(0)
         , Initialized(false)
     {
         CAllocAndClone(SharedSlotName, aSharedSlotName);
@@ -105,6 +106,7 @@ namespace smi
         {
             if(std::atomic_load(&(Head->KeyStat)) == KEY_CLEAN)
             {
+                FailedCount = 0;
                 return true;
             }
             else
@@ -116,6 +118,7 @@ namespace smi
                 #endif
             }
         }
+        ++FailedCount;
         return false;
     }
 

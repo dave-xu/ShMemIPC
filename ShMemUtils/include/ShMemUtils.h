@@ -50,7 +50,7 @@
 #define KEY_SET                             2
 
 #define MAX_TRY_NUM                         50000
-#define SLEEP_INTERVAL                      1
+#define MAX_FAIL_NUM	                    5
 
 typedef volatile std::atomic<uint64_t>      KeyType;
 typedef volatile std::atomic<char>          KeyStatType;
