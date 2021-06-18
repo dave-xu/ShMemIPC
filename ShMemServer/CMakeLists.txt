@@ -41,7 +41,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 
-if(LINUX) 
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux") 
 target_link_libraries(ShMemServer
     PRIVATE 
     ShMemUtils
@@ -51,7 +51,7 @@ else()
 target_link_libraries(ShMemServer
     PRIVATE 
     ShMemUtils)
-endif(LINUX)
+endif()
 
 add_executable(ServerLauncher
 	src/ServerLauncher.cpp
@@ -62,7 +62,7 @@ target_include_directories(ServerLauncher
         ${COMMON_INCLUDE}
 )
 
-if(LINUX) 
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux") 
 target_link_libraries(ServerLauncher
     PRIVATE 
     ShMemUtils
@@ -72,4 +72,4 @@ else()
 target_link_libraries(ServerLauncher
     PRIVATE 
     ShMemUtils)
-endif(LINUX)
+endif()

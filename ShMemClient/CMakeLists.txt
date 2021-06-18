@@ -40,7 +40,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 # link the new library target with the binary target
-if(LINUX) 
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux") 
 target_link_libraries(ClientTest
     PRIVATE 
     ShMemUtils
@@ -50,4 +50,4 @@ else()
 target_link_libraries(ClientTest
     PRIVATE 
     ShMemUtils)
-endif(LINUX)
+endif()

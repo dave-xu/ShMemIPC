@@ -77,13 +77,14 @@ int main()
     CloseHandle(pi.hThread);
 #else
     int status;
+    int pid = 0;
     pid = fork();
     switch (pid) {
         case -1:
             perror("fork");
             break;
         case 0:
-            execl("./"SERVER_PROC_NAME, "ShMemServer", (char*)0);
+            execl("./" SERVER_PROC_NAME, "ShMemServer", (char*)0);
             perror("exec");
             break;
         default:
