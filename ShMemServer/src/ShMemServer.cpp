@@ -1,5 +1,6 @@
 #include "ShMemServer.h"
 #include <iostream>
+#include <inttypes.h>
 #if ON_WINDOWS
 #else
 #include <sched.h>
@@ -31,7 +32,7 @@ namespace smi
         {
             DebugPrint("SlotData create succ.\n");
             smiAddressType SlotDataAddress = SlotMemPtr->GetAddress();
-            DebugPrint("CreateSlotDataAddress:|%s|%lld|\n", SlotMemPtr->GetName(), (int64_t)SlotDataAddress);
+            DebugPrint("CreateSlotDataAddress:|%s|%" PRId64 "|\n", SlotMemPtr->GetName(), (int64_t)SlotDataAddress);
             memset(SlotDataAddress, 0, MaxSlotNum);
             DebugPrint("SlotData memset ok.\n");
             return true;
