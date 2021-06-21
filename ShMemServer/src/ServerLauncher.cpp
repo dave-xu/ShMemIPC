@@ -79,25 +79,21 @@ int main()
     int status;
     int pid = 0;
     pid = fork();
-    switch (pid) {
-        case -1:
-            perror("fork");
-            break;
-        case 0:
-            execl("./" SERVER_PROC_NAME, "ShMemServer", (char*)0);
-            perror("exec");
-            break;
-        default:
-            if (waitpid(pid, &status, 0) != -1) 
-            {
-                printf("Child exited with status %i\n", status);
-            }
-            else
-            {
-                perror("waitpid");
-            }
-        break;
+    if(pid == -1)
+    {
+        perror("fork");
+        exit(-1);
     }
-    return 0;
+    if(pid > 0)
+    {
+        printf("Parent exit!\n");
+        exit(0);
+    }
+    if(pid == 0)
+    {
+        execl("./" SERVER_PROC_NAME, "ShMemServer", (char*)0);
+        printf("Child exited with status %i\n", status);
+        return 0;
+    }
 #endif
 }
