@@ -89,6 +89,10 @@ int main()
                 //std::cout << "match!!!" << buff << "|" << buff_data << std::endl;
                 
             }
+            #if ON_WINDOWS
+            #else
+            usleep(1);
+            #endif
         }
         double end = GetTickCountA();
         double val = (end - start);

@@ -5,33 +5,41 @@
 #include <vector>
 #include <memory>
 
-#define GOOD        0
-#define SEMA_ERROR  1
-#define SHMEM_ERROR 2
+#define GOOD                0
+#define MAX_IDLE_COUNT      5000000
 
 namespace smi
 {
+    enum ProcState
+    {
+        NONE,
+        GETVAL,
+        SETVAL,
+        ERRVAL
+    };
+
     class ShMemServer
     {
     public:
-        ShMemServer(const char* aSharedSlotName, int MaxConnNum, int aDataSize);
+        ShMemServer(const char* aSharedSlotName, unsigned char MaxConnNum, int aDataSize);
         virtual ~ShMemServer();
 
         bool            CreateShMemSlotData();
         void            Loop();
         
     protected:
-        bool            AllocateDataShMem(int SlotIndex);
-        bool            ProcessShMemData(std::shared_ptr<ShMemHolder> DataShMemHolderPtr);
+        bool            AllocateDataShMem(unsigned char SlotIndex);
+        ProcState       ProcessShMemData(std::shared_ptr<ShMemHolder> DataShMemHolderPtr);
         void            Clean();
 
     private:
         char*           SharedSlotName;
-        int             MaxSlotNum;
+        unsigned char   MaxSlotNum;
         int             MaxDataSize;
 
-        std::shared_ptr<ShMemHolder>                    SlotMemPtr;
-        std::map<char, std::shared_ptr<ShMemHolder>>    SlotToShMemData;
-        std::map<KeyType, std::vector<char>>            DataMap;
+        std::shared_ptr<ShMemHolder>                             SlotMemPtr;
+        std::map<unsigned char, std::shared_ptr<ShMemHolder>>    SlotToShMemData;
+        std::map<unsigned char, int>                             SlotTimeStamp;
+        std::map<KeyType, std::vector<char>>                     DataMap;
     };
 }

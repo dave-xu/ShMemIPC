@@ -1,6 +1,7 @@
 #include "ShMemUtils.h"
 #include <iostream>
 #include <memory>
+#include <inttypes.h>
 
 #if ON_WINDOWS
 #define SERVER_PROC_NAME "ShMemServer.exe"
@@ -19,7 +20,7 @@ bool PrepareShMemSlotData(const char* SharedSlotName, int MaxSlotNum)
     {
         DebugPrint("SlotData create succ.\n");
         smiAddressType SlotDataAddress = SlotMemPtr->GetAddress();
-        DebugPrint("CreateSlotDataAddress:|%s|%lld|\n", SlotMemPtr->GetName(), (int64_t)SlotDataAddress);
+        DebugPrint("CreateSlotDataAddress:|%s|%" PRId64 "|\n", SlotMemPtr->GetName(), (int64_t)SlotDataAddress);
         memset(SlotDataAddress, 0, MaxSlotNum);
         DebugPrint("SlotData memset ok.\n");
         return true;

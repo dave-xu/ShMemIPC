@@ -133,7 +133,7 @@ namespace smi
         MemoryFence();
         Head->Key = key;
         MemoryFence();
-        Head->KeyStat = KEY_DIRTY;
+        Head->KeyStat = KEY_GET;
         MemoryFence();
         if(!WaitForClean(Head))
         {

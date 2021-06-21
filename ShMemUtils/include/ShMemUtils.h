@@ -41,12 +41,12 @@
 #define FILE_PERMISSION              0666
 #endif
 
-#define MAX_CONN_NUM                        256
+#define MAX_CONN_NUM                        255
 #define MAX_DATA_SIZE                       24576
 #define SH_MEM_SLOTDATA_NAME                "SHMEMIPCSLOTS"
 
 #define KEY_CLEAN                           0
-#define KEY_DIRTY                           1
+#define KEY_GET                             1
 #define KEY_SET                             2
 
 #define MAX_TRY_NUM                         50000

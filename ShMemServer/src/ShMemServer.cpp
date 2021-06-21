@@ -9,7 +9,7 @@
 
 namespace smi
 {
-    ShMemServer::ShMemServer(const char* aSharedSlotName, int MaxConnNum, int aDataSize)
+    ShMemServer::ShMemServer(const char* aSharedSlotName, unsigned char MaxConnNum, int aDataSize)
         : MaxSlotNum(MaxConnNum)
         , MaxDataSize(aDataSize)
     {
@@ -44,7 +44,7 @@ namespace smi
         }
     }
 
-    bool ShMemServer::AllocateDataShMem(int SlotIndex)
+    bool ShMemServer::AllocateDataShMem(unsigned char SlotIndex)
     {
         char ConcatName[MAX_PATH_LEN] = { 0 };
         #if ON_WINDOWS
@@ -57,16 +57,17 @@ namespace smi
         if(sh->IsValid())
         {
             SlotToShMemData[SlotIndex] = sh;
+            SlotTimeStamp[SlotIndex] = 0;
             return true;
         }
         return false;
     }
 
-    bool ShMemServer::ProcessShMemData(std::shared_ptr<ShMemHolder> DataShMemHolderPtr)
+    ProcState ShMemServer::ProcessShMemData(std::shared_ptr<ShMemHolder> DataShMemHolderPtr)
     {
         smiAddressType DataAddress = DataShMemHolderPtr->GetAddress();
         ShMemDataHead* Head = (ShMemDataHead*)DataAddress;
-        if (std::atomic_load(&(Head->KeyStat)) == KEY_DIRTY)
+        if (std::atomic_load(&(Head->KeyStat)) == KEY_GET)
         {
             auto itr = DataMap.find(Head->Key);
             if (itr != DataMap.end())
@@ -76,7 +77,7 @@ namespace smi
                 if(MAX_DATA_SIZE - sizeof(ShMemDataHead) <= vec.size())
                 {
                     printf("Data exceed max size.\n");
-                    return false;
+                    return ERRVAL;
                 }
                 memmove(p, vec.data(), vec.size());
                 std::atomic_store(&Head->DataLen, (uint32_t)vec.size());
@@ -87,6 +88,7 @@ namespace smi
             }
             MemoryFence();
             std::atomic_store(&Head->KeyStat, KEY_CLEAN);
+            return GETVAL;
         }
         else if (std::atomic_load(&(Head->KeyStat)) == KEY_SET)
         {
@@ -95,8 +97,9 @@ namespace smi
             DataMap[Head->Key] = std::vector<char>(p, p + DataLen);
             MemoryFence();
             std::atomic_store(&Head->KeyStat, KEY_CLEAN);
+            return SETVAL;
         }
-        return true;
+        return NONE;
     }
 
 
@@ -104,14 +107,13 @@ namespace smi
     {
         printf("Server Begin Loop.\n");
         int state = GOOD;
-        int count = 0;
         while (state == GOOD)
         {
             smiAddressType SlotDataAddress = SlotMemPtr->GetAddress();
             char* p = (char*)SlotDataAddress;
             if (p[0])
             {
-                for (int i = 1; i < MaxSlotNum; ++i)
+                for (unsigned char i = 1; i < MaxSlotNum; ++i)
                 {
                     if (p[i] != 0)
                     {
@@ -124,7 +126,6 @@ namespace smi
                             }
                             else
                             {
-                                state = SHMEM_ERROR;
                                 DebugPrint("AllocateNewDataShMem failed\n");
                                 Clean();
                                 return;
@@ -137,15 +138,44 @@ namespace smi
 
             for (auto itr = SlotToShMemData.begin(); itr != SlotToShMemData.end(); ++itr)
             {
-                ++count;
                 //DebugPrint("ProcessIndex:|%d|%s|%d|\n", itr->first, itr->second->GetName(), count);
-                if(!ProcessShMemData(itr->second))
+                ProcState ps = ProcessShMemData(itr->second);
+                if(NONE == ps)
+                {
+                    ++SlotTimeStamp[itr->first];
+                }
+                else if(ERRVAL == ps)
                 {
                     DebugPrint("ProcessShMemData failed!\n");
                     Clean();
                     return;
                 }
+                else
+                {
+                    SlotTimeStamp[itr->first] = 0;
+                }
             }
+
+            static std::vector<unsigned char> tmpdel;
+            tmpdel.clear();           
+
+            for(auto itr = SlotTimeStamp.begin(); itr != SlotTimeStamp.end(); ++itr)
+            {
+                if(itr->second > MAX_IDLE_COUNT)
+                {
+                    tmpdel.emplace_back(itr->first);
+                }
+            }
+
+            for(unsigned char idx : tmpdel)
+            {
+                DebugPrint("recycle-idx:%d,count:%d\n", idx, SlotTimeStamp[idx]);
+                SlotToShMemData.erase(idx);
+                SlotTimeStamp.erase(idx);
+                p[idx] = 0;
+                
+            }
+
             #if ON_WINDOWS
             Sleep(0);
             #else
