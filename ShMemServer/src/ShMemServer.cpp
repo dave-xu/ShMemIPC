@@ -80,14 +80,14 @@ namespace smi
                     return ERRVAL;
                 }
                 memmove(p, vec.data(), vec.size());
-                std::atomic_store(&Head->DataLen, (uint32_t)vec.size());
+                Head->DataLen = (uint32_t)vec.size();
             }
             else
             {
-                std::atomic_store(&Head->DataLen, 0);
+                Head->DataLen = 0;
             }
             MemoryFence();
-            std::atomic_store(&Head->KeyStat, KEY_CLEAN);
+            Head->KeyStat = KEY_CLEAN;
             return GETVAL;
         }
         else if (std::atomic_load(&(Head->KeyStat)) == KEY_SET)
@@ -96,7 +96,7 @@ namespace smi
             uint32_t DataLen = std::atomic_load(&Head->DataLen);
             DataMap[Head->Key] = std::vector<char>(p, p + DataLen);
             MemoryFence();
-            std::atomic_store(&Head->KeyStat, KEY_CLEAN);
+            Head->KeyStat = KEY_CLEAN;
             return SETVAL;
         }
         return NONE;
