@@ -55,49 +55,53 @@
 
 namespace smi
 {
-	typedef volatile std::atomic<uint64_t>      KeyType;
-	typedef volatile std::atomic<char>          KeyStatType;
-	typedef volatile std::atomic<uint32_t>      KeyLenType;
+    typedef volatile unsigned char SlotType;
+    typedef volatile uint64_t      KeyType;
+    typedef volatile unsigned char KeyStatType;
+    typedef volatile uint32_t      KeyLenType;
 
-	bool				CAllocAndClone(char*& Dest, const char* Source);
-	void                MemoryFence();
-	bool                CheckProcAliveByName(const char* ProcName);
+    SlotType 			TestAndSwapSlotVal(SlotType*    ptr, SlotType       expected, SlotType      newval);
+    KeyStatType 		TestAndSwapKeyStat(KeyStatType* ptr, KeyStatType    expected, KeyStatType   newval);
 
-	struct ShMemDataHead
-	{
-		KeyStatType     KeyStat;
-		KeyType         Key;
-		KeyLenType      DataLen;
-	};
+    bool				CAllocAndClone(char*& Dest, const char* Source);
+    void                MemoryFence();
+    bool                CheckProcAliveByName(const char* ProcName);
+
+    struct ShMemDataHead
+    {
+        KeyStatType     KeyStat;
+        KeyType         Key;
+        KeyLenType      DataLen;
+    };
 
 
 
-	class ShMemHolder
-	{
-	public:
-		explicit ShMemHolder(const char* name, smiSizeType size);
-		~ShMemHolder();
+    class ShMemHolder
+    {
+    public:
+        explicit ShMemHolder(const char* name, smiSizeType size);
+        ~ShMemHolder();
 
-	private:
-		void				CreateOrOpen();
-		void				Close();
+    private:
+        void				CreateOrOpen();
+        void				Close();
 
-	public:
-		bool 				IsValid();
-		const char*			GetName();
-		smiSizeType			GetSize();
-		smiAddressType		GetAddress();
+    public:
+        bool 				IsValid();
+        const char*			GetName();
+        smiSizeType			GetSize();
+        smiAddressType		GetAddress();
 
-	private:
-		ShMemHolder(const ShMemHolder&);
-		ShMemHolder(const ShMemHolder&&);
+    private:
+        ShMemHolder(const ShMemHolder&);
+        ShMemHolder(const ShMemHolder&&);
 
-	private:
-		char*				Name;
-		char* 				FullShMemName;
-		smiSizeType			Size;
-		smiFileHandle		Handle;
-		smiAddressType		MappedAddress;
-		bool				Initialized;
-	};
+    private:
+        char*				Name;
+        char* 				FullShMemName;
+        smiSizeType			Size;
+        smiFileHandle		Handle;
+        smiAddressType		MappedAddress;
+        bool				Initialized;
+    };
 }

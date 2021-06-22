@@ -54,20 +54,25 @@ namespace smi
             else
             {
                 smiAddressType SlotDataAddress = ShMemSlotPtr->GetAddress();
-                char* p = (char*)SlotDataAddress;
-                for (int i = 1; i < MAX_CONN_NUM; ++i)
+                SlotType* p = (SlotType*)SlotDataAddress;
+                for (unsigned char i = 1; i < MAX_CONN_NUM; ++i)
                 {
-                    if (p[i] == 0)
+                    SlotType expected = 0;
+                    if (expected == TestAndSwapSlotVal(&p[i], expected, 1))
                     {                    
-                        p[i] = 1;
                         AllocatedSlotIndex = i;
                         MemoryFence();
                         ++p[0];
                         printf("AllocateShMemSlot:|%d|\n", AllocatedSlotIndex);
                         return true;
                     }
+                    else
+                    {
+                        continue;
+                    }
                 }
                 AllocatedSlotIndex = -1;
+                DebugPrint("Connection full !\n");
                 return false;
             }
         }
@@ -104,7 +109,7 @@ namespace smi
     {
         for(int i = 0; i < MAX_TRY_NUM; ++i)
         {
-            if(std::atomic_load(&(Head->KeyStat)) == KEY_CLEAN)
+            if(Head->KeyStat == KEY_CLEAN)
             {
                 FailedCount = 0;
                 return true;
@@ -133,13 +138,17 @@ namespace smi
         MemoryFence();
         Head->Key = key;
         MemoryFence();
-        Head->KeyStat = KEY_GET;
+        KeyStatType expected = KEY_CLEAN;
+        if(expected != TestAndSwapKeyStat(&Head->KeyStat, expected, KEY_GET))
+        {
+            return false;
+        }
         MemoryFence();
         if(!WaitForClean(Head))
         {
             return false;
         }
-        DataLen = std::atomic_load(&Head->DataLen);
+        DataLen = Head->DataLen;
         if (DataLen == 0)
         {
             return false;
@@ -153,13 +162,13 @@ namespace smi
         return true;
     }
 
-    void ShMemClient::SetValue(KeyType key, char* Data, int DataLen)
+    bool ShMemClient::SetValue(KeyType key, char* Data, int DataLen)
     {
         smiAddressType DataAddress = ShMemDataPtr->GetAddress();
         volatile ShMemDataHead* Head = (volatile ShMemDataHead*)DataAddress;
         if(!WaitForClean(Head))
         {
-            return;
+            return false;
         }
         // std::cout << "set-wait-key-clean" << std::endl;
         MemoryFence();
@@ -172,7 +181,12 @@ namespace smi
         #endif
         Head->DataLen = DataLen;
         MemoryFence();
-        Head->KeyStat = KEY_SET;
+        KeyStatType expected = KEY_CLEAN;
+        if(expected != TestAndSwapKeyStat(&Head->KeyStat, expected, KEY_SET))
+        {
+            return false;
+        }
+        return true;
     }
 
     void ShMemClient::FreeShMemSlotIndex()

@@ -14,7 +14,7 @@ namespace smi
     public:
         bool            IsValid();
         bool            GetValue(KeyType key, char* Data, int BuffLen, int& DataLen);
-        void            SetValue(KeyType key, char* Data, int DataLen);
+        bool            SetValue(KeyType key, char* Data, int DataLen);
 
     private:
         bool            AllocateShMemSlotIndex();

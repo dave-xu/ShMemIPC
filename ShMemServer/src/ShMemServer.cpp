@@ -67,7 +67,7 @@ namespace smi
     {
         smiAddressType DataAddress = DataShMemHolderPtr->GetAddress();
         ShMemDataHead* Head = (ShMemDataHead*)DataAddress;
-        if (std::atomic_load(&(Head->KeyStat)) == KEY_GET)
+        if (Head->KeyStat == KEY_GET)
         {
             auto itr = DataMap.find(Head->Key);
             if (itr != DataMap.end())
@@ -87,16 +87,24 @@ namespace smi
                 Head->DataLen = 0;
             }
             MemoryFence();
-            Head->KeyStat = KEY_CLEAN;
+            KeyStatType expected = KEY_GET;
+            if(expected != TestAndSwapKeyStat(&Head->KeyStat, expected, KEY_CLEAN))
+            {
+                return ERRVAL;
+            }
             return GETVAL;
         }
-        else if (std::atomic_load(&(Head->KeyStat)) == KEY_SET)
+        else if (Head->KeyStat == KEY_SET)
         {
             char* p = (char*)DataAddress + sizeof(ShMemDataHead);
-            uint32_t DataLen = std::atomic_load(&Head->DataLen);
+            uint32_t DataLen = Head->DataLen;
             DataMap[Head->Key] = std::vector<char>(p, p + DataLen);
             MemoryFence();
-            Head->KeyStat = KEY_CLEAN;
+            KeyStatType expected = KEY_SET;
+            if(expected != TestAndSwapKeyStat(&Head->KeyStat, expected, KEY_CLEAN))
+            {
+                return ERRVAL;
+            }
             return SETVAL;
         }
         return NONE;
@@ -110,7 +118,7 @@ namespace smi
         while (state == GOOD)
         {
             smiAddressType SlotDataAddress = SlotMemPtr->GetAddress();
-            char* p = (char*)SlotDataAddress;
+            SlotType* p = (SlotType*)SlotDataAddress;
             if (p[0])
             {
                 for (unsigned char i = 1; i < MaxSlotNum; ++i)
@@ -169,11 +177,9 @@ namespace smi
 
             for(unsigned char idx : tmpdel)
             {
-                DebugPrint("recycle-idx:%d,count:%d\n", idx, SlotTimeStamp[idx]);
-                SlotToShMemData.erase(idx);
-                SlotTimeStamp.erase(idx);
-                p[idx] = 0;
-                
+                //DebugPrint("recycle-idx:%d,count:%d\n", idx, SlotTimeStamp[idx]);
+                SlotType expected = 1;
+                TestAndSwapSlotVal(&p[idx], expected, 0);                
             }
 
             #if ON_WINDOWS
