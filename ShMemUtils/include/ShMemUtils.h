@@ -1,7 +1,7 @@
 #pragma once
 
 // platform-specific headers.
-#if _MSC_VER
+#if defined(_MSC_VER)
 # define ON_WINDOWS		1
 # include <windows.h>
 #undef UNICODE
@@ -52,13 +52,13 @@
 #define MAX_TRY_NUM                         50000
 #define MAX_FAIL_NUM	                    5
 
-typedef volatile std::atomic<uint64_t>      KeyType;
-typedef volatile std::atomic<char>          KeyStatType;
-typedef volatile std::atomic<uint32_t>      KeyLenType;
-
 
 namespace smi
 {
+	typedef volatile std::atomic<uint64_t>      KeyType;
+	typedef volatile std::atomic<char>          KeyStatType;
+	typedef volatile std::atomic<uint32_t>      KeyLenType;
+
 	bool				CAllocAndClone(char*& Dest, const char* Source);
 	void                MemoryFence();
 	bool                CheckProcAliveByName(const char* ProcName);
