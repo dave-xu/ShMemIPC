@@ -70,7 +70,7 @@ int main()
             #else
             sprintf(buff, "test--%d", ++IncNum);
             #endif
-            KeyType key(10 + IncNum);
+            smi::KeyType key(10 + IncNum);
             //std::cout << "set-v:" << buff << std::endl;
             smc.SetValue(key, buff, 128);
             //std::cout << "get-v:" << buff << std::endl;
