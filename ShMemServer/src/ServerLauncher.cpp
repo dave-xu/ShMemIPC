@@ -27,7 +27,7 @@ bool PrepareShMemSlotData(const char* SharedSlotName, int MaxSlotNum)
     }
     else
     {
-        DebugPrint("SlotData create failed, release Semaphore and exit.\n");
+        DebugPrint("SlotData create failed.\n");
         return false;
     }
 }

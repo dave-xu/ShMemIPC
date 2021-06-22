@@ -16,7 +16,7 @@ namespace smi
         CAllocAndClone(SharedSlotName, aSharedSlotName);
     }
 
-    // ShMemServer would never try to destroy shared memory or semaphore.
+    // ShMemServer would never try to destroy shared memory.
     // It always tries to reuse them first, and create them if not exists.
     ShMemServer::~ShMemServer()
     {
@@ -39,7 +39,7 @@ namespace smi
         }
         else
         {
-            DebugPrint("SlotData create failed, release Semaphore and exit.\n");
+            DebugPrint("SlotData create failed.\n");
             return false;
         }
     }

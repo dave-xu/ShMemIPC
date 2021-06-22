@@ -91,7 +91,7 @@ int main()
             }
             #if ON_WINDOWS
             #else
-            usleep(1);
+            //usleep(1);
             #endif
         }
         double end = GetTickCountA();

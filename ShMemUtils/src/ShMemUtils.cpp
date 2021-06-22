@@ -158,6 +158,10 @@ namespace smi
 					}
 				}
 			}
+			else
+			{
+				DebugPrint("shm_open failed.");
+			}
 #endif
 		}
 	}

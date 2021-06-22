@@ -38,7 +38,7 @@
 #define smiFileHandle                int
 #define smiInvalidFileHandle         -1
 #define MAX_PATH_LEN                 128
-#define FILE_PERMISSION              0666
+#define FILE_PERMISSION              S_IRWXU
 #endif
 
 #define MAX_CONN_NUM                        255
