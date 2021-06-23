@@ -55,9 +55,9 @@
 
 namespace smi
 {
-    typedef volatile unsigned char SlotType;
+    typedef volatile char          SlotType;
     typedef volatile uint64_t      KeyType;
-    typedef volatile unsigned char KeyStatType;
+    typedef volatile char          KeyStatType;
     typedef volatile uint32_t      KeyLenType;
 
     SlotType 			TestAndSwapSlotVal(SlotType*    ptr, SlotType       expected, SlotType      newval);
