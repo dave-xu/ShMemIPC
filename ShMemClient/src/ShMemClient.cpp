@@ -62,7 +62,11 @@ namespace smi
                     {                    
                         AllocatedSlotIndex = i;
                         MemoryFence();
-                        ++p[0];
+                        expected = p[0];
+                        while (TestAndSwapSlotVal(p, expected, expected + 1) != expected)
+                        {
+                            expected = p[0];
+                        }
                         printf("AllocateShMemSlot:|%d|\n", AllocatedSlotIndex);
                         return true;
                     }

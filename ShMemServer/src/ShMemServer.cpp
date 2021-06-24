@@ -141,7 +141,11 @@ namespace smi
                         }
                     }
                 }
-                --p[0];
+                SlotType expected = p[0];
+                while (TestAndSwapSlotVal(p, expected, expected - 1) != expected)
+                {
+                    expected = p[0];
+                }
             }
 
             for (auto itr = SlotToShMemData.begin(); itr != SlotToShMemData.end(); ++itr)
