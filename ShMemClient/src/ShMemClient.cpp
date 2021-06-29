@@ -148,6 +148,11 @@ namespace smi
             return false;
         }
         MemoryFence();
+        if (Head->Key != key)
+        {
+            return false;
+        }
+        MemoryFence();
         if(!WaitForClean(Head))
         {
             return false;
@@ -187,6 +192,11 @@ namespace smi
         MemoryFence();
         KeyStatType expected = KEY_CLEAN;
         if(expected != TestAndSwapKeyStat(&Head->KeyStat, expected, KEY_SET))
+        {
+            return false;
+        }
+        MemoryFence();
+        if (Head->Key != key)
         {
             return false;
         }
