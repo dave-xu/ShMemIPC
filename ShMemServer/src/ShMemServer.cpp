@@ -115,12 +115,16 @@ namespace smi
     {
         printf("Server Begin Loop.\n");
         int state = GOOD;
+        unsigned int spincount = 0;
+        unsigned int busy = 0;
         while (state == GOOD)
         {
+            busy = 0;
             smiAddressType SlotDataAddress = SlotMemPtr->GetAddress();
             SlotType* p = (SlotType*)SlotDataAddress;
             if (p[0])
             {
+                busy |= 1;
                 for (unsigned char i = 1; i < MaxSlotNum; ++i)
                 {
                     if (p[i] != 0)
@@ -128,7 +132,7 @@ namespace smi
                         if (SlotToShMemData.find(i) == SlotToShMemData.end())
                         {
                             DebugPrint("AllocateNewDataIndex:|%d|\n", i);
-                            if(AllocateDataShMem(i))
+                            if (AllocateDataShMem(i))
                             {
                                 DebugPrint("AllocateNewDataShMem_index:%d succ\n", i);
                             }
@@ -152,11 +156,11 @@ namespace smi
             {
                 //DebugPrint("ProcessIndex:|%d|%s|%d|\n", itr->first, itr->second->GetName(), count);
                 ProcState ps = ProcessShMemData(itr->second);
-                if(NONE == ps)
+                if (NONE == ps)
                 {
                     ++SlotTimeStamp[itr->first];
                 }
-                else if(ERRVAL == ps)
+                else if (ERRVAL == ps)
                 {
                     DebugPrint("ProcessShMemData failed!\n");
                     Clean();
@@ -164,32 +168,70 @@ namespace smi
                 }
                 else
                 {
+                    busy |= 1;
                     SlotTimeStamp[itr->first] = 0;
                 }
             }
 
             static std::vector<unsigned char> tmpdel;
-            tmpdel.clear();           
+            tmpdel.clear();
 
-            for(auto itr = SlotTimeStamp.begin(); itr != SlotTimeStamp.end(); ++itr)
+            for (auto itr = SlotTimeStamp.begin(); itr != SlotTimeStamp.end(); ++itr)
             {
-                if(itr->second > MAX_IDLE_COUNT)
+                if (itr->second > MAX_IDLE_COUNT)
                 {
                     tmpdel.emplace_back(itr->first);
                 }
             }
 
-            for(unsigned char idx : tmpdel)
+            for (unsigned char idx : tmpdel)
             {
                 //DebugPrint("recycle-idx:%d,count:%d\n", idx, SlotTimeStamp[idx]);
                 SlotType expected = 1;
-                TestAndSwapSlotVal(&p[idx], expected, 0);                
+                TestAndSwapSlotVal(&p[idx], expected, 0);
             }
 
-            #if ON_WINDOWS
+            if (busy)
+            {
+                spincount = 0;
+            }
+            else
+            {
+                ++spincount;
+            }
+
+#if ON_WINDOWS
             Sleep(0);
-            #else
-            sched_yield();
+#else
+            static struct timespec ts;
+            if (spincount < 20)
+            {
+                sched_yield();
+            }
+            else if (spincount < 200)
+            {                
+                ts.tv_sec = 0;
+                ts.tv_nsec = 1;
+                nanosleep(&ts, &ts);
+            }
+            else if(spincount < 2000)
+            {
+                ts.tv_sec = 0;
+                ts.tv_nsec = 100;
+                nanosleep(&ts, &ts);
+            }
+			else if(spincount < 20000)
+			{
+				ts.tv_sec = 0;
+				ts.tv_nsec = 1000;
+				nanosleep(&ts, &ts);
+			}
+			else
+			{
+				ts.tv_sec = 0;
+				ts.tv_nsec = 10000;
+				nanosleep(&ts, &ts);
+			}
             #endif
         }
     }
