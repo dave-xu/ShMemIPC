@@ -220,18 +220,24 @@ namespace smi
                 ts.tv_nsec = 100;
                 nanosleep(&ts, &ts);
             }
-			else if(spincount < 20000)
-			{
-				ts.tv_sec = 0;
-				ts.tv_nsec = 1000;
-				nanosleep(&ts, &ts);
-			}
-			else
-			{
-				ts.tv_sec = 0;
-				ts.tv_nsec = 10000;
-				nanosleep(&ts, &ts);
-			}
+            else if(spincount < 20000)
+            {
+                ts.tv_sec = 0;
+                ts.tv_nsec = 1000;
+                nanosleep(&ts, &ts);
+            }
+            else if(spincount < 200000)
+            {
+                ts.tv_sec = 0;
+                ts.tv_nsec = 10000;
+                nanosleep(&ts, &ts);
+            }
+            else
+            {
+                ts.tv_sec = 0;
+                ts.tv_nsec = 50000;
+                nanosleep(&ts, &ts);
+            }
             #endif
         }
     }
